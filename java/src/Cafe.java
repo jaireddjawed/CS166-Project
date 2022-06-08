@@ -313,7 +313,7 @@ public class Cafe {
 
                   if (authorisedUser.getType().equals("Manager") || authorisedUser.getType().equals("Employee"))
                   {
-
+                     System.out.println("6. Change Order Status to Paid");
                   }
 
                   System.out.println(".........................");
@@ -328,6 +328,12 @@ public class Cafe {
                         usermenu = false;
                         authorisedUser = null;
                      break;
+                     case 6:
+                        if (authorisedUser.getType().equals("Manager") || authorisedUser.getType().equals("Employee"))
+                        {
+                           ChangeOrderToPaid(esql);
+                           break; // Only for Manager and Employee
+                        }
                      default : System.out.println("Unrecognized choice!"); break;
                   }
                }
@@ -604,7 +610,6 @@ public class Cafe {
                   MenuOptions.deleteItem(esql, itemName);
                }
                catch (SQLException e) {
-                  System.out.println(e);
                   PrettyPrinter.printMessage("Failed to delete item");
                }
                catch (IOException e) {
@@ -618,8 +623,105 @@ public class Cafe {
    }
 
    public static void UpdateProfile(Cafe esql){
-      // update user's own profile information
-      // if they are a manager, they can update other users' information
+      String userType = esql.getUser().getType();
+      String managerChoice = "";
+
+      if (userType.equals("Manager")) {
+         try {
+            do {
+               System.out.print("Do you want to update your profile or another user's profile? (own/other): ");
+               managerChoice = in.readLine();
+
+               if (!managerChoice.equals("own") && !managerChoice.equals("other")) {
+                  PrettyPrinter.printMessage("Invalid input!");
+               }
+            } while (!managerChoice.equals("own") && !managerChoice.equals("other"));
+         }
+         catch (IOException e) {
+            PrettyPrinter.printMessage("There was an error with your input.");
+         }
+      }
+
+      String userLogin = "";
+
+      try {
+         if (managerChoice.equals("other")) {
+            ProfileOptions.listUsers(esql);
+
+            System.out.print("Enter user login to update: ");
+            userLogin = in.readLine();
+         }
+         else {
+            userLogin = esql.getUser().getLogin();
+         }
+      }
+      catch (IOException e) {
+         PrettyPrinter.printMessage("There was an error with your input.");
+      }
+      catch (SQLException e) {
+         PrettyPrinter.printMessage("Failed to list all users.");
+      }
+
+
+      String phoneNum = "";
+      String favItems = "";
+      String type = "";
+      String password = "";
+
+      try {
+         while (phoneNum.equals("")) {
+            System.out.print("Enter updated phone number: ");
+            phoneNum = in.readLine();
+
+            if (phoneNum.equals("")) {
+               PrettyPrinter.printMessage("Invalid input for phone number!");
+            }
+         }
+
+         while (favItems.equals("")) {
+            System.out.print("Enter updated favorite items: ");
+            favItems = in.readLine();
+
+            if (favItems.equals("")) {
+               PrettyPrinter.printMessage("Invalid input for favorite items!");
+            }
+         }
+
+         if (userType.equals("Manager")) {
+            while (type.equals("") || (!type.equals("Customer") && !type.equals("Manager") && !type.equals("Employee"))) {
+               System.out.print("Enter updated type: ");
+               type = in.readLine();
+
+               if (type.equals("")) {
+                  PrettyPrinter.printMessage("Invalid input for type!");
+               }
+            }
+         }
+
+         while (password.equals("")) {
+            System.out.print("Enter updated password: ");
+            password = in.readLine();
+
+            if (password.equals("")) {
+               PrettyPrinter.printMessage("Invalid input for password!");
+            }
+         }
+      }
+      catch (IOException e) {
+         PrettyPrinter.printMessage("There was an error with your input.");
+      }
+
+      try {
+         if (managerChoice.equals("other")) {
+            ProfileOptions.updateUser(esql, userLogin, phoneNum, favItems, type, password);
+         }
+         else {
+            ProfileOptions.updateProfile(esql, userLogin, phoneNum, favItems, password);
+         }
+      }
+      catch (SQLException e) {
+         PrettyPrinter.printMessage("Failed to update user.");
+      }
    }
 
    public static void PlaceOrder(Cafe esql){
@@ -689,17 +791,16 @@ public class Cafe {
    public static void UpdateOrder(Cafe esql){
       // customers can update any non-paid orders
       System.out.print("\tEnter order ID: ");
+      
       try {
          String orderId = in.readLine();
       } catch (IOException e) {
-         // TODO Auto-generated catch block
          e.printStackTrace();
       }
    }
 
    public static void ViewOrderHistory(Cafe esql){
       // view all orders for a user (limit to 5 items)
-      //
       String userType = esql.getUser().getType();
       String orderHistoryType = "";
 
@@ -721,13 +822,31 @@ public class Cafe {
             OrderOptions.viewOrderHistory(esql);
          }
       } catch (SQLException e) {
-         System.out.println(e);
          PrettyPrinter.printMessage("Failed to view order history");
       }
    }
 
    public static void ChangeOrderToPaid(Cafe esql) {
-      // employees and managers can change any order to paid
+      try {
+         OrderOptions.viewAllUnpaidOrders(esql);
+      } catch (SQLException e) {
+         PrettyPrinter.printMessage("Failed to view unpaid orders");
+      }
+
+      try {
+         // employees and managers can change any order to paid
+         System.out.print("\tEnter order ID: ");
+         String orderId = in.readLine();
+
+         String updateOrderQuery = "update Orders set paid = true where orderid = " + orderId;
+         esql.executeUpdate(updateOrderQuery);
+      }
+      catch (SQLException e) {
+         PrettyPrinter.printMessage("Failed to update order");
+      }
+      catch (IOException e) {
+         System.out.println("There was an error reading your input.");
+      }
    }
 }//end Cafe
 

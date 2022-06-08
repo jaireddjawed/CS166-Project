@@ -28,4 +28,17 @@ public class OrderOptions {
       System.out.println(numOrders + " order(s) found. \n");
     }
   }
+
+  public static void viewAllUnpaidOrders(Cafe esql) throws SQLException {
+    // view all unpaid orders
+    String query = "SELECT * FROM Orders WHERE paid = false";
+    int numOrders = esql.executeQuery(query);
+
+    if (numOrders == 0) {
+      PrettyPrinter.printMessage("No unpaid orders found.");
+    } else {
+      esql.executeQueryAndPrintResult(query);
+      System.out.println(numOrders + " unpaid order(s) found. \n");
+    }
+  }
 }
