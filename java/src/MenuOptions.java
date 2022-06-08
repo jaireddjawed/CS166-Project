@@ -49,8 +49,14 @@ public class MenuOptions {
   }
 
   public static void deleteItem(Cafe esql, String name) throws SQLException {
+    // remove the itemstatus of an item (because it depends on the item's primary key)
+    String itemStatusQuery = String.format("delete from ItemStatus where itemName = '%s'", name);
+    esql.executeUpdate(itemStatusQuery);
+
+    // delete the item
     String query = String.format("DELETE FROM Menu WHERE itemName = '%s'", name);
     esql.executeUpdate(query);
+
     PrettyPrinter.printMessage("Item deleted successfully.");
   }
 }

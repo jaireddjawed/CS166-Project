@@ -310,6 +310,12 @@ public class Cafe {
                   System.out.println("3. Place a Order");
                   System.out.println("4. Update a Order");
                   System.out.println("5. View Order History");
+
+                  if (authorisedUser.getType().equals("Manager") || authorisedUser.getType().equals("Employee"))
+                  {
+
+                  }
+
                   System.out.println(".........................");
                   System.out.println("9. Log out");
                   switch (readChoice()){
@@ -478,10 +484,10 @@ public class Cafe {
                MenuOptions.searchItemsByType(esql, itemType);
             }
             catch (SQLException e) {
-               System.out.println("There was an error listing all items.");
+               PrettyPrinter.printMessage("There was an error listing all items.");
             }
             catch (IOException e) {
-               System.out.println("There was an error with your input.");
+               PrettyPrinter.printMessage("There was an error with your input.");
             }
             break;
          case 4:
@@ -490,7 +496,7 @@ public class Cafe {
                   String itemName;
 
                   do {
-                     System.out.print("\tEnter item name: ");
+                     System.out.print("Enter item name: ");
                      itemName = in.readLine();
                      if (itemName.equals("")) {
                         System.out.println("Invalid item name!");
@@ -500,7 +506,7 @@ public class Cafe {
                   String itemType;
 
                   do {
-                     System.out.print("\tEnter item type: ");
+                     System.out.print("Enter item type: ");
                      itemType = in.readLine();
                      if (itemType.equals("")) {
                         System.out.println("Invalid item type!");
@@ -509,32 +515,30 @@ public class Cafe {
 
                   String itemPrice;
                   do {
-                     System.out.print("\tEnter item price: ");
+                     System.out.print("Enter item price: ");
                      itemPrice = in.readLine();
                      if (itemPrice.equals("")) {
                         System.out.println("Invalid item price!");
                      }
                   } while (itemPrice.equals(""));
 
-                  System.out.print("\tEnter item description (optional): ");
+                  System.out.print("Enter item description (optional): ");
                   String itemDescription = in.readLine();
 
-                  System.out.print("\tEnter item URL (optional): ");
+                  System.out.print("Enter item URL (optional): ");
                   String itemURL = in.readLine();
 
                   MenuOptions.addItem(esql, itemName, itemType, itemPrice, itemDescription, itemURL);
                }
                catch (SQLException e) {
-                  System.out.println("Failed to add item");
+                  PrettyPrinter.printMessage("Failed to delete item");
                }
                catch (IOException e) {
-                  System.out.println("There was an error with your input.");
+                  PrettyPrinter.printMessage("There was an error with your input.");
                }
+
+               break;
             }
-            else {
-               System.out.println("Unrecognized choice!");
-            }
-            break;
          case 5:
             if (esql.getUser().getType().equals("Manager")) {
                try {
@@ -545,13 +549,13 @@ public class Cafe {
                }
 
                try {
-                  System.out.print("\tEnter item name: ");
+                  System.out.print("Enter item name: ");
                   String itemName = in.readLine();
 
                   String itemType;
 
                   do {
-                     System.out.print("\tEnter item type: ");
+                     System.out.print("Enter item type: ");
                      itemType = in.readLine();
                      if (itemType.equals("")) {
                         System.out.println("Invalid item type!");
@@ -560,29 +564,30 @@ public class Cafe {
 
                   String itemPrice;
                   do {
-                     System.out.print("\tEnter updated item price: ");
+                     System.out.print("Enter updated item price: ");
                      itemPrice = in.readLine();
                      if (itemPrice.equals("")) {
                         System.out.println("Invalid item price!");
                      }
                   } while (itemPrice.equals(""));
 
-                  System.out.print("\tEnter updated item description: ");
+                  System.out.print("Enter updated item description: ");
                   String itemDescription = in.readLine();
 
-                  System.out.print("\tEnter updated item URL: ");
+                  System.out.print("Enter updated item URL: ");
                   String itemURL = in.readLine();
 
                   MenuOptions.updateItem(esql, itemName, itemType, itemPrice, itemDescription, itemURL);
                }
                catch (SQLException e) {
-                  System.out.println("Failed to delete item");
+                  PrettyPrinter.printMessage("Failed to delete item");
                }
                catch (IOException e) {
-                  System.out.println("There was an error with your input.");
+                  PrettyPrinter.printMessage("There was an error with your input.");
                }
+
+               break;
             }
-            break;
          case 6:
             if (esql.getUser().getType().equals("Manager")) {
                try {
@@ -593,23 +598,22 @@ public class Cafe {
                }
 
                try {
-                  System.out.print("\tEnter item name: ");
+                  System.out.print("Enter item name: ");
                   String itemName = in.readLine();
 
                   MenuOptions.deleteItem(esql, itemName);
                }
                catch (SQLException e) {
-                  System.out.println("Failed to delete item");
+                  System.out.println(e);
+                  PrettyPrinter.printMessage("Failed to delete item");
                }
                catch (IOException e) {
-                  System.out.println("There was an error with your input.");
+                  PrettyPrinter.printMessage("There was an error with your input.");
                }
+
+               break;
             }
-            else {
-               System.out.println("Unrecognized choice!");
-            }
-            break;
-         default : System.out.println("Unrecognized choice!"); break;
+         default : PrettyPrinter.printMessage("Unrecognized choice!"); break;
       }//end switch
    }
 
@@ -678,7 +682,7 @@ public class Cafe {
          System.out.println("\n");
       }
       catch (SQLException e) {
-         System.out.println("There was an error inserting your order.");
+         PrettyPrinter.printMessage("Failed to place order");
       }
    }
 
@@ -694,7 +698,32 @@ public class Cafe {
    }
 
    public static void ViewOrderHistory(Cafe esql){
-      // view all orders for a user
+      // view all orders for a user (limit to 5 items)
+      //
+      String userType = esql.getUser().getType();
+      String orderHistoryType = "";
+
+      try {
+         if (userType.equals("Manager") || userType.equals("Employee")) {
+            System.out.print("Would you like to view \"all\" orders made in the past 24 hours, or your \"own\" order history (all/own): ");
+            orderHistoryType = in.readLine();
+         }
+      }
+      catch (IOException e) {
+         PrettyPrinter.printMessage("There was an error reading your input.");
+      }
+
+      try {
+         if (orderHistoryType.equals("all")) {
+            OrderOptions.viewAllOrderHistory(esql);
+         }
+         else {
+            OrderOptions.viewOrderHistory(esql);
+         }
+      } catch (SQLException e) {
+         System.out.println(e);
+         PrettyPrinter.printMessage("Failed to view order history");
+      }
    }
 
    public static void ChangeOrderToPaid(Cafe esql) {
