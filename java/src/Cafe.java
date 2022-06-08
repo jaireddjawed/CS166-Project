@@ -493,14 +493,57 @@ public class Cafe {
    public static void PlaceOrder(Cafe esql){
       // users can place an order
 
-      System.out.print("Please enter the item name you would like to order: ");
-      String itemName = in.readLine();
+      try {
+         MenuOptions.listAllItems(esql);
+      }
+      catch (SQLException e) {
+         System.out.println("There was an error retrieving all items.");
+      }
 
-      //Str
+      String moreItems = "y";
+      double total = 0;
 
-      System.out.print("Please enter the quantity you would like to order: ");
-      int quantity = Integer.parseInt(in.readLine());
-      
+      while (moreItems.equals("y")) {
+         try {
+            System.out.print("Please enter the item name you would like to order: ");
+            String itemName = in.readLine();
+
+            String checkMenuItemExistsQuery = "select * from MENU where itemName = '" + itemName + "'";
+            List<List<String>> checkMenuItemExistsResult = esql.executeQueryAndReturnResult(checkMenuItemExistsQuery);
+
+            if (checkMenuItemExistsResult.size() == 0) {
+               System.out.println("Item does not exist in the menu. Please try again.");
+               continue;
+            }
+            else {
+               double price = Double.parseDouble(checkMenuItemExistsResult.get(0).get(2));
+               System.out.println("Item price: $" + price);
+
+               System.out.print("Please enter the quantity you would like to order: ");
+               int quantity = Integer.parseInt(in.readLine());
+
+               total += price * quantity;
+
+               System.out.print("Do you want to order more items? (y/n): ");
+               moreItems = in.readLine();
+            }
+         }
+         catch (IOException e) {
+            System.out.println("There was an error reading your input.");
+         }
+         catch (SQLException e) {
+            System.out.println("There was an error checking your item.");
+         }
+      }
+
+      System.out.println("\n");
+      System.out.println("+----------------------------+");
+      System.out.println("|                            |");
+      System.out.println("|  Thank you for your order. |");
+      System.out.println("|        Total: $" + total + "         |");
+      System.out.println("|                            |");
+      System.out.println("+----------------------------+");
+      System.out.println("\n");
    }
 
    public static void UpdateOrder(Cafe esql){
