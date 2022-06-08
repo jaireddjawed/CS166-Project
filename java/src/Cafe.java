@@ -130,9 +130,9 @@ public class Cafe {
       // convert the database information into an array list so that it can be pretty-printted
       ArrayList<List<String>> result = new ArrayList <List<String>>();
 
-      while (rs.next()){
-         result.add(new ArrayList<String>());
+      result.add(new ArrayList<String>());
 
+      while (rs.next()){
          if (outputHeader) {
             for (int i = 1; i <= numCol; i++) {
                String columnName = rsmd.getColumnName (i);
@@ -140,11 +140,15 @@ public class Cafe {
             }
 
             outputHeader = false;
+            rowCount++;
          }
-            for (int i=1; i<=numCol; i++) {
-               String columnValue = rs.getString (i);
-               result.get(rowCount).add(columnValue.replaceAll(" ", ""));
-            }
+
+         result.add(new ArrayList<String>());
+
+         for (int i=1; i<=numCol; i++) {
+            String columnValue = rs.getString (i);
+            result.get(rowCount).add(columnValue.replaceAll(" ", ""));
+         }
 
          rowCount++;
       }//end while
@@ -435,6 +439,7 @@ public class Cafe {
       System.out.println("2. Search for an item by name");
       System.out.println("3. Search for an item by type");
 
+      // only print items 4-6 if the user is a manager
       if (esql.getUser().getType().equals("Manager")) {
          System.out.println("4. Add an item");
          System.out.println("5. Update an item");
@@ -448,12 +453,12 @@ public class Cafe {
                try {
                   MenuOptions.listAllItems(esql);
                } catch (SQLException e) {
-                  // TODO Auto-generated catch block
-                  e.printStackTrace();
+                  System.out.println("Failed to list all items");
                } break;
          case 2:
+            System.out.print("\tEnter item name: ");
+
             try {
-               System.out.print("\tEnter item name: ");
                String itemName = in.readLine();
                MenuOptions.searchItemByName(esql, itemName);
             }
@@ -461,26 +466,149 @@ public class Cafe {
                System.out.println("There was an error with your query.");
             }
             catch (IOException e) {
-               e.printStackTrace();
+               System.out.println("There was an error with your input.");
             }
 
             break;
          case 3:
             System.out.print("\tEnter item type: ");
-            String itemType;
 
             try {
-               itemType = in.readLine();
+               String itemType = in.readLine();
                MenuOptions.searchItemsByType(esql, itemType);
             }
             catch (SQLException e) {
-               // TODO Auto-generated catch block
-               e.printStackTrace();
+               System.out.println("There was an error listing all items.");
             }
-            catch (IOException e1) {
-               // TODO Auto-generated catch block
-               e1.printStackTrace();
+            catch (IOException e) {
+               System.out.println("There was an error with your input.");
             }
+            break;
+         case 4:
+            if (esql.getUser().getType().equals("Manager")) {
+               try {
+                  String itemName;
+
+                  do {
+                     System.out.print("\tEnter item name: ");
+                     itemName = in.readLine();
+                     if (itemName.equals("")) {
+                        System.out.println("Invalid item name!");
+                     }
+                  } while (itemName.equals(""));
+
+                  String itemType;
+
+                  do {
+                     System.out.print("\tEnter item type: ");
+                     itemType = in.readLine();
+                     if (itemType.equals("")) {
+                        System.out.println("Invalid item type!");
+                     }
+                  } while (itemType.equals(""));
+
+                  String itemPrice;
+                  do {
+                     System.out.print("\tEnter item price: ");
+                     itemPrice = in.readLine();
+                     if (itemPrice.equals("")) {
+                        System.out.println("Invalid item price!");
+                     }
+                  } while (itemPrice.equals(""));
+
+                  System.out.print("\tEnter item description (optional): ");
+                  String itemDescription = in.readLine();
+
+                  System.out.print("\tEnter item URL (optional): ");
+                  String itemURL = in.readLine();
+
+                  MenuOptions.addItem(esql, itemName, itemType, itemPrice, itemDescription, itemURL);
+               }
+               catch (SQLException e) {
+                  System.out.println("Failed to add item");
+               }
+               catch (IOException e) {
+                  System.out.println("There was an error with your input.");
+               }
+            }
+            else {
+               System.out.println("Unrecognized choice!");
+            }
+            break;
+         case 5:
+            if (esql.getUser().getType().equals("Manager")) {
+               try {
+                  MenuOptions.listAllItems(esql);
+               }
+               catch (SQLException e) {
+                  System.out.println("Failed to list all items");
+               }
+
+               try {
+                  System.out.print("\tEnter item name: ");
+                  String itemName = in.readLine();
+
+                  String itemType;
+
+                  do {
+                     System.out.print("\tEnter item type: ");
+                     itemType = in.readLine();
+                     if (itemType.equals("")) {
+                        System.out.println("Invalid item type!");
+                     }
+                  } while (itemType.equals(""));
+
+                  String itemPrice;
+                  do {
+                     System.out.print("\tEnter updated item price: ");
+                     itemPrice = in.readLine();
+                     if (itemPrice.equals("")) {
+                        System.out.println("Invalid item price!");
+                     }
+                  } while (itemPrice.equals(""));
+
+                  System.out.print("\tEnter updated item description: ");
+                  String itemDescription = in.readLine();
+
+                  System.out.print("\tEnter updated item URL: ");
+                  String itemURL = in.readLine();
+
+                  MenuOptions.updateItem(esql, itemName, itemType, itemPrice, itemDescription, itemURL);
+               }
+               catch (SQLException e) {
+                  System.out.println("Failed to delete item");
+               }
+               catch (IOException e) {
+                  System.out.println("There was an error with your input.");
+               }
+            }
+            break;
+         case 6:
+            if (esql.getUser().getType().equals("Manager")) {
+               try {
+                  MenuOptions.listAllItems(esql);
+               }
+               catch (SQLException e) {
+                  System.out.println("Failed to list all items");
+               }
+
+               try {
+                  System.out.print("\tEnter item name: ");
+                  String itemName = in.readLine();
+
+                  MenuOptions.deleteItem(esql, itemName);
+               }
+               catch (SQLException e) {
+                  System.out.println("Failed to delete item");
+               }
+               catch (IOException e) {
+                  System.out.println("There was an error with your input.");
+               }
+            }
+            else {
+               System.out.println("Unrecognized choice!");
+            }
+            break;
          default : System.out.println("Unrecognized choice!"); break;
       }//end switch
    }
@@ -517,7 +645,6 @@ public class Cafe {
             }
             else {
                double price = Double.parseDouble(checkMenuItemExistsResult.get(0).get(2));
-               System.out.println("Item price: $" + price);
 
                System.out.print("Please enter the quantity you would like to order: ");
                int quantity = Integer.parseInt(in.readLine());
@@ -536,14 +663,23 @@ public class Cafe {
          }
       }
 
-      System.out.println("\n");
-      System.out.println("+----------------------------+");
-      System.out.println("|                            |");
-      System.out.println("|  Thank you for your order. |");
-      System.out.println("|        Total: $" + total + "         |");
-      System.out.println("|                            |");
-      System.out.println("+----------------------------+");
-      System.out.println("\n");
+      String insertOrderQuery = "insert into Orders (orderid, login, paid, timeStampRecieved, total) values (default, '" + esql.getUser().getLogin() + "', false, NOW(), " + total + ")";
+
+      try {
+         esql.executeUpdate(insertOrderQuery);
+
+         System.out.println("\n");
+         System.out.println("+----------------------------+");
+         System.out.println("|                            |");
+         System.out.println("|  Thank you for your order. |");
+         System.out.println("|        Total: $" + total + "         |");
+         System.out.println("|                            |");
+         System.out.println("+----------------------------+");
+         System.out.println("\n");
+      }
+      catch (SQLException e) {
+         System.out.println("There was an error inserting your order.");
+      }
    }
 
    public static void UpdateOrder(Cafe esql){

@@ -6,8 +6,8 @@ public class User {
 
   // will add the other fields later
   public User(String login, String type) {
-    this.login = login;
-    this.type = type;
+    this.login = login.replaceAll(" ", "");
+    this.type = type.replaceAll(" ", "");
   }
 
   public String getLogin() {
