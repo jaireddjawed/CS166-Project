@@ -17,6 +17,7 @@ public class User {
   public void setFavItems(String favItems) {
     this.favItems = favItems;
   }
+
   public String getLogin() {
     return login;
   }
@@ -27,5 +28,13 @@ public class User {
 
   public String getType() {
     return type;
+  }
+
+  public String getFavItems() {
+    return favItems;
+  }
+
+  public String toString() {
+    return String.format("User<{%s %s %s %s}>", login, phoneNum, favItems, type);
   }
 }

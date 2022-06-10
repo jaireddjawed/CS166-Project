@@ -1,6 +1,8 @@
 import java.sql.SQLException;
 
 public class OrderOptions {
+  public static void updateOrder(Cafe esql) {}
+
   public static void viewOrderHistory(Cafe esql) throws SQLException {
     String userLogin = esql.getUser().getLogin();
 
