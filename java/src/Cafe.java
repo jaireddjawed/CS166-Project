@@ -809,107 +809,165 @@ public class Cafe {
    public static void UpdateOrder(Cafe esql){
       // customers can update any non-paid orders
 
-      try {
-         String orderId;
+      String employeeChoice = "";
 
+      if (esql.getUser().getType().equals("Manager") || esql.getUser().getType().equals("Employee")) {
+         System.out.print("Would you like to update your own orders or another user's orders? (own/other): ");
          try {
-            // customers
-            String listUnpaidOrdersQuery = "select * from Orders where login = '" + esql.getUser().getLogin() + "' and paid = false";
-            int numOrders = esql.executeQueryAndPrintResult(listUnpaidOrdersQuery);
+            do {
+               employeeChoice = in.readLine();
 
-            if (numOrders == 0) {
-               PrettyPrinter.printMessage("You have no unpaid orders.");
-               return;
-            }
-
-         } catch (SQLException e) {
-            PrettyPrinter.printMessage("Failed to view order history.");
+               if (!employeeChoice.equals("own") && !employeeChoice.equals("other")) {
+                  PrettyPrinter.printMessage("Invalid input!");
+               }
+            } while(!employeeChoice.equals("own") && !employeeChoice.equals("other"));
          }
+         catch (IOException e) {
+            PrettyPrinter.printMessage("There was an error with your input.");
+         }
+      }
 
-
-         do {
-            System.out.print("Enter order ID: ");
-            orderId = in.readLine();
-
-            if (orderId.equals("")) {
-               PrettyPrinter.printMessage("Please enter an orderId!");
-            }
-
-            String checkOrderExistsQuery = "select * from Orders where orderid = " + orderId + " and login = '" + esql.getUser().getLogin() + "' and paid = false";
+      if (employeeChoice.equals("own") || esql.getUser().getType().equals("Customer")) {
+         try {
+            String orderId;
 
             try {
-               int numOrders = esql.executeQuery(checkOrderExistsQuery);
+               // customers
+               String listUnpaidOrdersQuery = "select * from Orders where login = '" + esql.getUser().getLogin() + "' and paid = false";
+               int numOrders = esql.executeQueryAndPrintResult(listUnpaidOrdersQuery);
 
                if (numOrders == 0) {
-                  PrettyPrinter.printMessage("Order does not exist.");
+                  PrettyPrinter.printMessage("You have no unpaid orders.");
+                  return;
                }
+
             } catch (SQLException e) {
-               PrettyPrinter.printMessage("Failed to check order.");
+               PrettyPrinter.printMessage("Failed to view order history.");
             }
 
-         } while (orderId.equals(""));
+
+            do {
+               System.out.print("Enter order ID: ");
+               orderId = in.readLine();
+
+               if (orderId.equals("")) {
+                  PrettyPrinter.printMessage("Please enter an orderId!");
+               }
+
+               String checkOrderExistsQuery = "select * from Orders where orderid = " + orderId + " and login = '" + esql.getUser().getLogin() + "' and paid = false";
+
+               try {
+                  int numOrders = esql.executeQuery(checkOrderExistsQuery);
+
+                  if (numOrders == 0) {
+                     PrettyPrinter.printMessage("Order does not exist.");
+                  }
+               } catch (SQLException e) {
+                  PrettyPrinter.printMessage("Failed to check order.");
+               }
+
+            } while (orderId.equals(""));
+
+            try {
+               MenuOptions.listAllItems(esql);
+            }
+            catch (SQLException e) {
+               PrettyPrinter.printMessage("Failed to list all menu items.");
+            }
+
+            System.out.print("Please enter the item name you would like to add: ");
+            String itemName = in.readLine();
+
+            String checkMenuItemExistsQuery = String.format("select * from Menu where itemName = '%s'", itemName);
+            int numMenuItems;
+
+            try {
+               numMenuItems = esql.executeQuery(checkMenuItemExistsQuery);
+               if (numMenuItems == 0) {
+                  PrettyPrinter.printMessage("Item does not exist in the menu.");
+                  return;
+               }
+            }
+            catch (SQLException e) {
+               PrettyPrinter.printMessage("Failed to check menu item.");
+            }
+
+            double price = 0;
+            try {
+               // get the price of the item
+               String getPriceQuery = "select price from MENU where itemName = '" + itemName + "'";
+               List<List<String>> getPriceResult;
+
+               getPriceResult = esql.executeQueryAndReturnResult(getPriceQuery);
+               price = Double.parseDouble(getPriceResult.get(0).get(0));
+            } catch (SQLException e) {
+               PrettyPrinter.printMessage("Failed to get price.");
+            }
+
+            System.out.print("Please enter the quantity you would like to add: ");
+            int quantity = Integer.parseInt(in.readLine());
+
+
+            // get the existing order price
+            String getOrderPriceQuery = "select total from Orders where orderid = " + orderId;
+            List<List<String>> getOrderPriceResult;
+
+            try {
+               getOrderPriceResult = esql.executeQueryAndReturnResult(getOrderPriceQuery);
+               double orderPrice = Double.parseDouble(getOrderPriceResult.get(0).get(0));
+
+               // update the order price
+               double newOrderPrice = orderPrice + price * quantity;
+               String updateOrderPriceQuery = "update Orders set total = " + newOrderPrice + " where orderid = " + orderId;
+
+               esql.executeUpdate(updateOrderPriceQuery);
+
+               PrettyPrinter.printMessage("Order updated.");
+            } catch (SQLException e) {
+               PrettyPrinter.printMessage("Failed to update order price.");
+            }
+         } catch (IOException e) {
+            e.printStackTrace();
+         }
+      }
+      else if (employeeChoice.equals("other")) {
+         String unpaidOrderStatus = "";
 
          try {
-            MenuOptions.listAllItems(esql);
-         }
-         catch (SQLException e) {
-            PrettyPrinter.printMessage("Failed to list all menu items.");
+            unpaidOrderStatus = OrderOptions.viewAllUnpaidOrders(esql);
+         } catch (SQLException e) {
+            PrettyPrinter.printMessage("Failed to view unpaid orders.");
          }
 
-         System.out.print("Please enter the item name you would like to add: ");
-         String itemName = in.readLine();
+         if (unpaidOrderStatus.equals("none")) {
+            return;
+         }
 
-         String checkMenuItemExistsQuery = String.format("select * from Menu where itemName = '%s'", itemName);
-         int numMenuItems;
+         System.out.print("Please enter the order ID you would like to set to \"paid\": ");
 
          try {
-            numMenuItems = esql.executeQuery(checkMenuItemExistsQuery);
-            if (numMenuItems == 0) {
-               PrettyPrinter.printMessage("Item does not exist in the menu.");
+            String orderId = in.readLine();
+
+            String checkOrderExistsQuery = "select * from Orders where orderid = " + orderId + " and paid = false";
+            int numOrders = esql.executeQuery(checkOrderExistsQuery);
+
+            if (numOrders == 0) {
+               PrettyPrinter.printMessage("Order does not exist.");
                return;
             }
-         }
-         catch (SQLException e) {
-            PrettyPrinter.printMessage("Failed to check menu item.");
-         }
 
-         double price = 0;
-         try {
-            // get the price of the item
-            String getPriceQuery = "select price from MENU where itemName = '" + itemName + "'";
-            List<List<String>> getPriceResult;
-
-            getPriceResult = esql.executeQueryAndReturnResult(getPriceQuery);
-            price = Double.parseDouble(getPriceResult.get(0).get(0));
-         } catch (SQLException e) {
-            PrettyPrinter.printMessage("Failed to get price.");
-         }
-
-         System.out.print("Please enter the quantity you would like to add: ");
-         int quantity = Integer.parseInt(in.readLine());
-
-
-         // get the existing order price
-         String getOrderPriceQuery = "select total from Orders where orderid = " + orderId;
-         List<List<String>> getOrderPriceResult;
-
-         try {
-            getOrderPriceResult = esql.executeQueryAndReturnResult(getOrderPriceQuery);
-            double orderPrice = Double.parseDouble(getOrderPriceResult.get(0).get(0));
-
-            // update the order price
-            double newOrderPrice = orderPrice + price * quantity;
-            String updateOrderPriceQuery = "update Orders set total = " + newOrderPrice + " where orderid = " + orderId;
-
-            esql.executeUpdate(updateOrderPriceQuery);
+            String updateOrderQuery = "update Orders set paid = true where orderid = " + orderId;
+            esql.executeUpdate(updateOrderQuery);
 
             PrettyPrinter.printMessage("Order updated.");
-         } catch (SQLException e) {
-            PrettyPrinter.printMessage("Failed to update order price.");
          }
-      } catch (IOException e) {
-         e.printStackTrace();
-      }
+         catch (IOException e) {
+            PrettyPrinter.printMessage("There was an error with your input.");
+         }
+         catch (SQLException e) {
+            PrettyPrinter.printMessage("Failed to check order.");
+         }
+       }
    }
 
    public static void ViewOrderHistory(Cafe esql){

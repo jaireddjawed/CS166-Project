@@ -32,7 +32,7 @@ public final class PrettyPrinter {
         // todo: calculate number of spaces to center the message
         System.out.print("\n");
         System.out.println("+-------------------------------------------------------+");
-        System.out.println("|            "+message+"              |");
+        System.out.println("            "+message+"              ");
         System.out.println("+-------------------------------------------------------+");
         System.out.print("\n");
     }

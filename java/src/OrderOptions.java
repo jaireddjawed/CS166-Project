@@ -31,16 +31,18 @@ public class OrderOptions {
     }
   }
 
-  public static void viewAllUnpaidOrders(Cafe esql) throws SQLException {
+  public static String viewAllUnpaidOrders(Cafe esql) throws SQLException {
     // view all unpaid orders
     String query = "SELECT * FROM Orders WHERE paid = false";
     int numOrders = esql.executeQuery(query);
 
     if (numOrders == 0) {
       PrettyPrinter.printMessage("No unpaid orders found.");
+      return "none";
     } else {
       esql.executeQueryAndPrintResult(query);
       System.out.println(numOrders + " unpaid order(s) found. \n");
+      return "some";
     }
   }
 }
