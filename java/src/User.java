@@ -10,6 +10,13 @@ public class User {
     this.type = type.replaceAll(" ", "");
   }
 
+  public void setPhoneNum(String phoneNum) {
+    this.phoneNum = phoneNum;
+  }
+
+  public void setFavItems(String favItems) {
+    this.favItems = favItems;
+  }
   public String getLogin() {
     return login;
   }

@@ -3,7 +3,8 @@ import java.sql.SQLException;
 public class ProfileOptions {
   public static void listUsers(Cafe esql) throws SQLException {
     String currentUserId = esql.getUser().getLogin();
-    String query = String.format("SELECT * FROM Users WHERE login != '%s'", currentUserId);
+    // changed here so that mangers are not able to see other managers
+    String query = String.format("SELECT * FROM Users WHERE login != '%s' AND type != 'Manager'", currentUserId);
     int numUsers = esql.executeQuery(query);
 
     if (numUsers == 0) {

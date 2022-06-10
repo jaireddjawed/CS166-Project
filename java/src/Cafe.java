@@ -159,6 +159,11 @@ public class Cafe {
       printer.print(output);
 
       stmt.close ();
+
+      // we temporarily had to include the headers in the row count so that it would be printed out properly
+      // we will now remove the header from the row count
+      rowCount -= 1;
+
       return rowCount;
    }//end executeQuery
 
@@ -311,6 +316,7 @@ public class Cafe {
                   System.out.println("4. Update a Order");
                   System.out.println("5. View Order History");
 
+                  // only shows up if the a user is a manager or an employee
                   if (authorisedUser.getType().equals("Manager") || authorisedUser.getType().equals("Employee"))
                   {
                      System.out.println("6. Change Order Status to Paid");
@@ -413,6 +419,7 @@ public class Cafe {
       * Check log in credentials for an existing user
       * @return User login or null is the user does not exist
       **/
+      // changed to return User object
    public static User LogIn(Cafe esql){
       try{
          System.out.print("\tEnter user login: ");
